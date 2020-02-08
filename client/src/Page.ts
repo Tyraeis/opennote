@@ -209,6 +209,19 @@ export default class Page {
 
     handlePointerUp(e: PointerEvent) {
         // Stopped drawing line; delete pointer object
+        let p = this.getAndUpdatePointer(e);
+
+        if (p) {
+            if (p.action == PointerAction.Draw) {
+                // Extend line
+                this.lines[p.lineId].points.push({
+                    x: e.offsetX,
+                    y: e.offsetY,
+                    weight: e.pressure
+                });
+            }
+        }
+                
         delete this.pointers[e.pointerId];
         this.needsRedraw = true;
     }
