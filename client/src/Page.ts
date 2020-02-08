@@ -10,8 +10,7 @@ interface Point {
 }
 
 enum PointerAction {
-    Gone,
-    Hover,
+    None,
     Draw,
     Erase,
     Select
@@ -38,11 +37,9 @@ export default class Page {
         this.canvas = document.createElement("canvas");
         this.canvas.classList.add("page-canvas");
 
-        this.canvas.onpointerenter = (e) => this.handlePointerEnter(e);
         this.canvas.onpointerdown = (e) => this.handlePointerDown(e);
         this.canvas.onpointermove = (e) => this.handlePointerMove(e);
         this.canvas.onpointerup = (e) => this.handlePointerUp(e);
-        this.canvas.onpointerout = (e) => this.handlePointerOut(e);
 
         this.canvas.width = this.parent.clientWidth;
         this.canvas.height = this.parent.clientHeight;
@@ -74,40 +71,12 @@ export default class Page {
             }
             this.ctx.stroke();
         }
-
-        for (let pointerId in this.pointers) {
-            let pointer = this.pointers[pointerId];
-
-            this.ctx.strokeStyle = "#aaa";
-            this.ctx.beginPath();
-            this.ctx.arc(pointer.x, pointer.y, 4, 0, 2*Math.PI);
-            this.ctx.stroke();
-        }
-    }
-
-    handlePointerEnter(e: PointerEvent) {
-        if (!(e.pointerId in this.pointers)) {
-            this.pointers[e.pointerId] = {
-                x: e.clientX,
-                y: e.clientY,
-                action: PointerAction.Hover,
-                lineId: -1
-            }
-        } else {
-            this.pointers[e.pointerId].action = PointerAction.Hover;
-        }
-        this.needsRedraw = true;
     }
 
     handlePointerDown(e: PointerEvent) {
-        let p = this.pointers[e.pointerId];
-        p.x = e.clientX;
-        p.y = e.clientY;
-        p.action = PointerAction.Draw;
-        p.lineId = this.nextLineId;
+        e.preventDefault();
 
-        this.nextLineId += 1;
-        this.lines[p.lineId] = {
+        this.lines[this.nextLineId] = {
             color: "#000",
             points: [{
                 x: e.clientX,
@@ -115,10 +84,21 @@ export default class Page {
                 weight: e.pressure
             }]
         };
+
+        this.pointers[e.pointerId] = {
+            x: e.clientX,
+            y: e.clientY,
+            action: PointerAction.Draw,
+            lineId: this.nextLineId
+        }
+
+        this.nextLineId += 1;
         this.needsRedraw = true;
     }
 
     handlePointerMove(e: PointerEvent) {
+        e.preventDefault();
+
         let p = this.pointers[e.pointerId];
         p.x = e.clientX;
         p.y = e.clientY;
@@ -134,14 +114,6 @@ export default class Page {
     }
 
     handlePointerUp(e: PointerEvent) {
-        let p = this.pointers[e.pointerId];
-        p.x = e.clientX;
-        p.y = e.clientY;
-        p.action = PointerAction.Hover;
-        this.needsRedraw = true;
-    }
-
-    handlePointerOut(e: PointerEvent) {
         delete this.pointers[e.pointerId];
         this.needsRedraw = true;
     }
