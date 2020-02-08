@@ -38,7 +38,7 @@ export default class Page {
     pointers: Record<number, PointerState> = {};
     nextLineId = 0;
     needsRedraw = false;
-    
+
     public color: string = "#000";
 
     constructor(parent: HTMLElement) {
@@ -133,15 +133,15 @@ export default class Page {
     getAndUpdatePointer(e: PointerEvent): PointerState {
         if (!(e.pointerId in this.pointers)) {
             return this.pointers[e.pointerId] = {
-                x: e.clientX,
-                y: e.clientY,
+                x: e.offsetX,
+                y: e.offsetY,
                 action: PointerAction.None,
                 lineId: -1
             }
         } else {
             let p = this.pointers[e.pointerId];
-            p.x = e.clientX;
-            p.y = e.clientY;
+            p.x = e.offsetX;
+            p.y = e.offsetY;
             return p;
         }
     }
@@ -154,8 +154,8 @@ export default class Page {
         this.lines[this.nextLineId] = {
             color: this.color,
             points: [{
-                x: e.clientX,
-                y: e.clientY,
+                x: e.offsetX,
+                y: e.offsetY,
                 weight: e.pressure
             }]
         };
@@ -185,8 +185,8 @@ export default class Page {
             if (p.action == PointerAction.Draw) {
                 // Extend line
                 this.lines[p.lineId].points.push({
-                    x: e.clientX,
-                    y: e.clientY,
+                    x: e.offsetX,
+                    y: e.offsetY,
                     weight: e.pressure
                 });
             } else if (p.action == PointerAction.Erase) {
