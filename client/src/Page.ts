@@ -38,6 +38,8 @@ export default class Page {
     pointers: Record<number, PointerState> = {};
     nextLineId = 0;
     needsRedraw = false;
+    
+    public color: string = "#000";
 
     constructor(parent: HTMLElement) {
         this.parent = parent;
@@ -150,7 +152,7 @@ export default class Page {
         // Started drawing a line
         // Create new line object
         this.lines[this.nextLineId] = {
-            color: "#000",
+            color: this.color,
             points: [{
                 x: e.clientX,
                 y: e.clientY,
