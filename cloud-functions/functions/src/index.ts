@@ -21,3 +21,18 @@ export const createUserCollection = functions.auth.user().onCreate((user) => {
 export const deleteUserCollection = functions.auth.user().onDelete((user) => {
 	return db.collection('users').doc(user.uid).delete();
 })
+
+export const createDocument = functions.https.onCall((data, context) => {
+	if(!context.auth)
+	{
+		throw new functions.https.HttpsError('unauthenticated', 'Unable to verify user credentials');
+	}
+	const uid = context.auth.uid;
+	const docName = data.doc;
+	return db.collection('docs').doc(`${ uid }/${ docName }`).set({
+		owner: uid,
+		dateModified: Date.now() / 1000
+	}).then(() => {
+		console.log('New document created');
+	})
+})
