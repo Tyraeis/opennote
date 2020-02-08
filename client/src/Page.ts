@@ -1,6 +1,8 @@
+import msgpack from './lib/msgpack.min';
+
 interface Line {
     color: string,
-    points: [Point]
+    points: Point[]
 }
 
 interface Point {
@@ -25,7 +27,7 @@ interface PointerState {
 
 function square_distance(x1: number, y1: number, x2: number, y2: number) {
     let dx = x2 - x1, dy = y2 - y1;
-    return dx*dx + dy*dy;
+    return dx * dx + dy * dy;
 }
 
 export default class Page {
@@ -58,6 +60,47 @@ export default class Page {
         parent.appendChild(this.canvas);
 
         this.ctx = this.canvas.getContext("2d")!;
+    }
+
+    export(): Uint8Array {
+        let data: any = {
+            lines: []
+        };
+
+        for (let lineId in this.lines) {
+            let line = this.lines[lineId];
+            let compact_line: any = { color: line.color, points: [] };
+            for (let point of line.points) {
+                compact_line.points.push([point.x, point.y, point.weight])
+            }
+            data.lines.push(compact_line)
+        }
+
+        return msgpack.encode(data);
+    }
+
+    import(data_string: Uint8Array) {
+        let data: any = msgpack.decode(data_string);
+
+        // Clear existing data
+        this.lines = {}
+        this.nextLineId = 0;
+
+        for (let line of data.lines) {
+            let new_line: Line = {
+                color: line.color,
+                points: []
+            };
+            for (let point of line.points) {
+                new_line.points.push({
+                    x: point[0],
+                    y: point[1],
+                    weight: point[2]
+                });
+            }
+            this.lines[this.nextLineId++] = new_line;
+        }
+        this.needsRedraw = true;
     }
 
     render() {
@@ -125,17 +168,17 @@ export default class Page {
             p.action = PointerAction.Draw;
         }
         p.lineId = this.nextLineId;
-        
+
         this.nextLineId += 1;
         this.needsRedraw = true;
     }
-    
+
     handlePointerMove(e: PointerEvent) {
         e.preventDefault();
-        
+
         // Update pointer object
         let p = this.getAndUpdatePointer(e);
-        
+
         if (p) {
             if (p.action == PointerAction.Draw) {
                 // Extend line
@@ -149,8 +192,7 @@ export default class Page {
                 for (let lineId in this.lines) {
                     let line = this.lines[lineId];
                     for (let point of line.points) {
-                        // Check for line intersections
-
+                        // Erase this line if the point is close to the pen
                         if (square_distance(point.x, point.y, p.x, p.y) < 25) {
                             delete this.lines[lineId];
                             break;
@@ -159,7 +201,6 @@ export default class Page {
                 }
             }
         }
-
 
         this.needsRedraw = true;
     }
