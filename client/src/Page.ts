@@ -23,6 +23,11 @@ interface PointerState {
     lineId: number
 }
 
+function square_distance(x1: number, y1: number, x2: number, y2: number) {
+    let dx = x2 - x1, dy = y2 - y1;
+    return dx*dx + dy*dy;
+}
+
 export default class Page {
     parent: HTMLElement;
     canvas: HTMLCanvasElement;
@@ -120,18 +125,17 @@ export default class Page {
             p.action = PointerAction.Draw;
         }
         p.lineId = this.nextLineId;
-
+        
         this.nextLineId += 1;
         this.needsRedraw = true;
     }
-
+    
     handlePointerMove(e: PointerEvent) {
         e.preventDefault();
-
-        console.log(e);
-
-        let p = this.pointers[e.pointerId];
-
+        
+        // Update pointer object
+        let p = this.getAndUpdatePointer(e);
+        
         if (p) {
             if (p.action == PointerAction.Draw) {
                 // Extend line
@@ -144,24 +148,10 @@ export default class Page {
                 // Try to erase lines
                 for (let lineId in this.lines) {
                     let line = this.lines[lineId];
-                    for (let i = 1; i < line.points.length; i++) {
+                    for (let point of line.points) {
                         // Check for line intersections
-                        let p1 = line.points[i-1];
-                        let p2 = line.points[i];
 
-                        // https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
-                        let px = p.x, py = p.y;
-                        let rx = e.clientX - p.x, ry = e.clientY - p.y;
-                        let qx = p1.x, qy = p1.y;
-                        let sx = p2.x - p1.x, sy = p2.y - p1.y;
-
-                        let r_cross_s = rx*sy - ry*sx;
-                        if (r_cross_s == 0) continue;
-
-                        let t = ((qx - px) * sy - (qy - py) * sx) / r_cross_s;
-                        let u = ((qx - px) * ry - (qy - py) * rx) / r_cross_s;
-
-                        if (0 <= t && t <= 1 && 0 <= u && u <= 1) {
+                        if (square_distance(point.x, point.y, p.x, p.y) < 25) {
                             delete this.lines[lineId];
                             break;
                         }
@@ -170,8 +160,6 @@ export default class Page {
             }
         }
 
-        // Update pointer object
-        p = this.getAndUpdatePointer(e);
 
         this.needsRedraw = true;
     }
