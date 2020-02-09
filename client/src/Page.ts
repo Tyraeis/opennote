@@ -40,6 +40,7 @@ export default class Page {
     needsRedraw = false;
 
     public color: string = "#000";
+    public onchange: () => void | null;
 
     constructor(canvas: HTMLCanvasElement) {
         this._canvas = canvas;
@@ -49,15 +50,11 @@ export default class Page {
         this._canvas.onpointermove = (e) => this.handlePointerMove(e);
         this._canvas.onpointerup = (e) => this.handlePointerUp(e);
 
-        this._canvas.width = this.parent.clientWidth;
-        this._canvas.height = this.parent.clientHeight;
         this.needsRedraw = true;
 
         this.ctx = this._canvas.getContext("2d")!;
 
         window.addEventListener('resize', () => {
-            this._canvas.width = this.parent.clientWidth;
-            this._canvas.height = this.parent.clientHeight;
             this.needsRedraw = true;
         });
     }
@@ -66,7 +63,13 @@ export default class Page {
         return this._canvas
     }
 
-    export(): Uint8Array {
+    clear() {
+        this.lines = [];
+        this.nextLineId = 0;
+        this.needsRedraw = true;
+    }
+
+    export(): string {
         let data: any = {
             lines: []
         };
@@ -80,36 +83,47 @@ export default class Page {
             data.lines.push(compact_line)
         }
 
-        return msgpack.encode(data);
+        return String.fromCharCode.apply(null, msgpack.serialize(data));
     }
 
-    import(data_string: Uint8Array) {
-        let data: any = msgpack.decode(data_string);
-
+    import(data_ser: string) {
         // Clear existing data
-        this.lines = {}
-        this.nextLineId = 0;
+        this.clear();
 
-        for (let line of data.lines) {
-            let new_line: Line = {
-                color: line.color,
-                points: []
-            };
-            for (let point of line.points) {
-                new_line.points.push({
-                    x: point[0],
-                    y: point[1],
-                    weight: point[2]
-                });
-            }
-            this.lines[this.nextLineId++] = new_line;
+        var buf = new Uint8Array(data_ser.length);
+        for (var i = 0; i < data_ser.length; i++) {
+            buf[i] = data_ser.charCodeAt(i);
         }
-        this.needsRedraw = true;
+
+        try {
+            let data: any = msgpack.deserialize(buf);
+        
+            for (let line of data.lines) {
+                let new_line: Line = {
+                    color: line.color,
+                    points: []
+                };
+                for (let point of line.points) {
+                    new_line.points.push({
+                        x: point[0],
+                        y: point[1],
+                        weight: point[2]
+                    });
+                }
+                this.lines[this.nextLineId++] = new_line;
+            }
+        } catch (e) {
+            console.log(e);
+            alert("Document is corrupted");
+        }
     }
 
     render() {
         if (!this.needsRedraw) return;
         this.needsRedraw = false;
+
+        this._canvas.width = this.parent.clientWidth;
+        this._canvas.height = this.parent.clientHeight;
 
         this.ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
 
@@ -129,6 +143,12 @@ export default class Page {
                 this.ctx.stroke();
             }
             this.ctx.stroke();
+        }
+    }
+
+    doChange() {
+        if (this.onchange != null) {
+            this.onchange();
         }
     }
 
@@ -175,6 +195,7 @@ export default class Page {
 
         this.nextLineId += 1;
         this.needsRedraw = true;
+        this.doChange();
     }
 
     handlePointerMove(e: PointerEvent) {
@@ -191,6 +212,7 @@ export default class Page {
                     y: e.offsetY,
                     weight: e.pressure
                 });
+                this.doChange();
             } else if (p.action == PointerAction.Erase) {
                 // Try to erase lines
                 for (let lineId in this.lines) {
@@ -203,6 +225,7 @@ export default class Page {
                         }
                     }
                 }
+                this.doChange();
             }
         }
 
@@ -226,5 +249,6 @@ export default class Page {
                 
         delete this.pointers[e.pointerId];
         this.needsRedraw = true;
+        this.doChange();
     }
 }

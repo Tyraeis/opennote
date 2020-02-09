@@ -6,6 +6,14 @@ html, body, #root {
   font-family: sans-serif;
 }
 
+.hidden {
+  display: none;
+}
+
+.flex-spacer {
+  flex-grow: 1;
+}
+
 #app {
   position: fixed;
   width: 100%;
@@ -15,15 +23,16 @@ html, body, #root {
   overflow: hidden;
 }
 
-#toolbar {
+.toolbar {
   display: flex;
   flex-direction: row;
   align-items: stretch;
   background-color: #eee;
   border-bottom: 2px solid #ddd;
+  padding: 0px 8px;
 }
 
-#toolbar .toolbar-brand {
+.toolbar .toolbar-brand {
   font-size: 18px;
   text-decoration: none;
   color: black;
@@ -31,39 +40,86 @@ html, body, #root {
   margin-right: 8px;
 }
 
-#toolbar .toolbar-group {
+.toolbar .toolbar-group {
   display: flex;
   flex-direction: row;
   align-items: stretch;
 }
 
-#pen-selector .pen {
+.toolbar-group .toolbar-text {
+  padding: 8px;
+}
+
+.text-secondary {
+  color: #888;
+}
+
+.pen-selector .pen {
   display: flex;
   align-items: stretch;
   justify-content: stretch;
 }
 
-#pen-selector .pen .pen-button {
+.pen-selector .pen .pen-button {
   display: none;
 }
 
-#pen-selector .pen .pen-label {
+.pen-selector .pen .pen-label {
   padding: 4px;
 }
 
-#pen-selector .pen .pen-label:hover {
+.pen-selector .pen .pen-label:hover {
   background-color: #fff;
 }
 
-#pen-selector .pen .pen-button:checked ~ .pen-label {
+.pen-selector .pen .pen-button:checked ~ .pen-label {
   border-bottom: 2px solid #888;
 }
 
-#canvas-container {
+.content {
+  display: flex;
+  flex-direction: row;
+}
+
+.content {
+  flex-grow: 1;
+}
+
+.file-selector {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8f8f8;
+  border-left: 2px solid #ddd;
+}
+
+.file-list {
+  list-style-type: none;
+  margin: 0px;
+  padding: 0px;
+}
+
+.file-entry {
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+.new-file {
+  padding: 8px;
+  border-top: 1px solid #ddd;
+}
+
+.file-entry:hover, .new-file:hover {
+  background-color: #fff;
+}
+
+.canvas-container {
   position: relative;
+  overflow: hidden;
   flex-grow: 1;
 }
 
 canvas {
+  position: absolute;
   touch-action: none;
 }

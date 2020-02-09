@@ -20,11 +20,22 @@ const auth = firebase.auth();
 const functions = firebase.functions();
 
 export default {
-    signIn: auth.signInWithPopup(provider),
-    createUserCollection: functions.httpsCallable('createUserCollection'),
-    deleteUserCollection: functions.httpsCallable('deleteUserCollection'),
-    createDocument: functions.httpsCallable('createDocument'),
-    updateDocument: functions.httpsCallable('updateDocument'),
-    getDocuments: functions.httpsCallable('getDocuments'),
-    getDocument: functions.httpsCallable('getDocument')
+    signIn: () =>
+        auth.signInWithPopup(provider),
+    signOut: () =>
+        auth.signOut(),
+    createDocument: (doc: string) =>
+        functions.httpsCallable('createDocument')({ doc }),
+    updateDocument: (doc: string, content: string) =>
+        functions.httpsCallable('updateDocument')({ doc, content }),
+    getDocuments: () =>
+        functions.httpsCallable('getDocuments')()
+            .then((result) =>
+                result.data.collections as string[]
+            ),
+    getDocument: (doc: string) =>
+        functions.httpsCallable('getDocument')({ doc })
+            .then((result) =>
+                result.data as { dateModified: number, content: string }
+            )
 };
