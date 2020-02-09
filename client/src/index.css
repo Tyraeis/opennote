@@ -79,9 +79,6 @@ html, body, #root {
 .content {
   display: flex;
   flex-direction: row;
-}
-
-.content {
   flex-grow: 1;
 }
 
@@ -100,8 +97,19 @@ html, body, #root {
 }
 
 .file-entry {
-  padding: 8px;
   border-bottom: 1px solid #ddd;
+  display: flex;
+  user-select: none;
+}
+
+.file-name {
+  padding: 8px;
+  flex-grow: 1;
+}
+
+.delete-file {
+  padding: 8px 14px;
+  border-left: 1px solid #ddd;
 }
 
 .new-file {
@@ -109,7 +117,7 @@ html, body, #root {
   border-top: 1px solid #ddd;
 }
 
-.file-entry:hover, .new-file:hover {
+.file-name:hover, .delete-file:hover, .new-file:hover {
   background-color: #fff;
 }
 

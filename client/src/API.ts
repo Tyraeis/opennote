@@ -37,5 +37,7 @@ export default {
         functions.httpsCallable('getDocument')({ doc })
             .then((result) =>
                 result.data as { dateModified: number, content: string }
-            )
+            ),
+    removeDocument: (doc: string) =>
+        functions.httpsCallable('removeDocument')({ doc }),
 };

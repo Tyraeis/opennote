@@ -53,6 +53,7 @@ export default class App extends React.Component<{}, AppState> {
                         fileList={this.state.documentList}
                         onnavigate={(name) => this.handleNavigate(name)}
                         oncreate={(name) => this.handleCreate(name)}
+                        ondelete={(name) => this.handleDelete(name)}
                     ></FileSelector>
                 </div>
             </div>
@@ -151,7 +152,7 @@ export default class App extends React.Component<{}, AppState> {
     handleCreate(fileName: string) {
         API.createDocument(fileName)
             .then(() => {
-                this.page!.clear();
+                if (this.state.documentName != '') this.page!.clear();
                 return API.updateDocument(fileName, this.page!.export())
             })
             .then(() => {
@@ -162,6 +163,29 @@ export default class App extends React.Component<{}, AppState> {
                 console.log(reason);
                 alert("Document creation failed");
             })
+    }
+
+    handleDelete(fileName: string) {
+        this.setState({
+            statusMessage: "Deleting " + fileName + "..."
+        })
+        API.removeDocument(fileName)
+            .then(() => {
+                if (fileName == this.state.documentName) {
+                    this.page!.clear();
+                    this.setState({
+                        documentName: ''
+                    });
+                }
+                this.setState({
+                    statusMessage: "Page Deleted."
+                })
+                return this.updateDocumentList()
+            })
+            .catch((reason) => {
+                console.log(reason);
+                alert("Error deleting document");
+            });
     }
 
     mainLoop() {
