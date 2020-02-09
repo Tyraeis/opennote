@@ -8,6 +8,7 @@ module.exports = {
         path: path.resolve(__dirname, 'dist'),
     },
     mode: 'development',
+    target: 'web',
     module: {
         rules: [
             {
@@ -21,6 +22,7 @@ module.exports = {
                     'style-loader',
                     'css-loader'
                 ],
+                exclude: /node_modules/,
             }
         ],
     },
@@ -28,6 +30,6 @@ module.exports = {
         extensions: ['.ts', '.tsx', '.js']
     },
     plugins: [
-        new CopyWebpackPlugin(['public/index.html'])
-    ]
+        new CopyWebpackPlugin(['public/index.html', 'public/firebase-messaging-sw.js'])
+    ],
 };

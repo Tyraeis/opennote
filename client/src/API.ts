@@ -1,6 +1,7 @@
 import firebase from 'firebase';
 import 'firebase/functions';
 import 'firebase/auth';
+import 'firebase/database';
 
 const firebaseConfig = {
     apiKey: "AIzaSyCh_auw2PFMm8lqUYFu2JfurSBWzC4PELo",
@@ -18,10 +19,20 @@ firebase.initializeApp(firebaseConfig);
 const provider = new firebase.auth.GoogleAuthProvider();
 const auth = firebase.auth();
 const functions = firebase.functions();
+const db = firebase.firestore();
 
-export default {
+type MessageHandler = (msg: { document: string, content: string }) => void;
+
+var currentUser: firebase.User | null
+var subscriptions: Record<string, { fn: MessageHandler, unsubscribe: () => void }> = {}
+
+const API = {
     signIn: () =>
-        auth.signInWithPopup(provider),
+        auth.signInWithPopup(provider)
+            .then(resp => {
+                currentUser = resp.user
+                return resp
+            }),
     signOut: () =>
         auth.signOut(),
     createDocument: (doc: string) =>
@@ -40,4 +51,34 @@ export default {
             ),
     removeDocument: (doc: string) =>
         functions.httpsCallable('removeDocument')({ doc }),
+    subscribe: async (doc: string, fn: (msg: { document: string, content: string }) => void) => {
+        console.log("sub", doc)
+
+        if (currentUser == null) {
+            return;
+        }
+
+        console.log(`docs/${currentUser.uid}/${doc}/data`)
+
+        var unsubscribe = db.collection('docs').doc(`${currentUser.uid}/${doc}/data`)
+            .onSnapshot((snapshot) => {
+                console.log(snapshot);
+                fn({ document: doc, content: snapshot.data().content })
+            })
+
+        subscriptions[doc] = {
+            fn, unsubscribe
+        }
+    },
+    unsubscribe: (doc: string) => {
+        subscriptions[doc].unsubscribe();
+        delete subscriptions[doc];
+    },
+    unsubscribeAll: () => {
+        for (let sub in subscriptions) {
+            API.unsubscribe(sub);
+        }
+    }
 };
+
+export default API;

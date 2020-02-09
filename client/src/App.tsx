@@ -140,12 +140,20 @@ export default class App extends React.Component<{}, AppState> {
     }
 
     handleNavigate(fileName: string) {
+        API.unsubscribeAll();
         API.getDocument(fileName)
             .then((doc: { content: string }) => {
                 this.setState({
                     documentName: fileName
                 });
                 this.page!.import(doc.content);
+                API.subscribe(fileName, (data) => {
+                    this.page!.import(data.content);
+                })
+            })
+            .catch(err => {
+                console.log(err)
+                alert("Failed to get document")
             })
     }
 
