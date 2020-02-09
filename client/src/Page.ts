@@ -32,7 +32,7 @@ function square_distance(x1: number, y1: number, x2: number, y2: number) {
 
 export default class Page {
     parent: HTMLElement;
-    canvas: HTMLCanvasElement;
+    _canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
     lines: Record<number, Line> = {};
     pointers: Record<number, PointerState> = {};
@@ -41,27 +41,29 @@ export default class Page {
 
     public color: string = "#000";
 
-    constructor(parent: HTMLElement) {
-        this.parent = parent;
-        this.canvas = document.createElement("canvas");
-        this.canvas.classList.add("page-canvas");
+    constructor(canvas: HTMLCanvasElement) {
+        this._canvas = canvas;
+        this.parent = canvas.parentElement;
 
-        this.canvas.onpointerdown = (e) => this.handlePointerDown(e);
-        this.canvas.onpointermove = (e) => this.handlePointerMove(e);
-        this.canvas.onpointerup = (e) => this.handlePointerUp(e);
+        this._canvas.onpointerdown = (e) => this.handlePointerDown(e);
+        this._canvas.onpointermove = (e) => this.handlePointerMove(e);
+        this._canvas.onpointerup = (e) => this.handlePointerUp(e);
 
-        this.canvas.width = this.parent.clientWidth;
-        this.canvas.height = this.parent.clientHeight;
+        this._canvas.width = this.parent.clientWidth;
+        this._canvas.height = this.parent.clientHeight;
+        this.needsRedraw = true;
+
+        this.ctx = this._canvas.getContext("2d")!;
 
         window.addEventListener('resize', () => {
-            this.canvas.width = this.parent.clientWidth;
-            this.canvas.height = this.parent.clientHeight;
+            this._canvas.width = this.parent.clientWidth;
+            this._canvas.height = this.parent.clientHeight;
             this.needsRedraw = true;
         });
+    }
 
-        parent.appendChild(this.canvas);
-
-        this.ctx = this.canvas.getContext("2d")!;
+    get canvas(): HTMLCanvasElement {
+        return this._canvas
     }
 
     export(): Uint8Array {
@@ -109,7 +111,7 @@ export default class Page {
         if (!this.needsRedraw) return;
         this.needsRedraw = false;
 
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
 
         // Draw all lines
         for (let lineId in this.lines) {
