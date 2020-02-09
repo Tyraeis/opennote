@@ -52,7 +52,7 @@ export const updateDocument = functions.https.onCall((data, context) => {
 	}
 	const uid = context.auth.uid;
 	const docName = data.doc;
-	const content: Uint8Array = data.content;
+	const content = data.content
 	return db.collection('docs').doc(`${ uid }/${ docName }/data`).update({
 		dateModified: Date.now() / 1000,
 		content: content
