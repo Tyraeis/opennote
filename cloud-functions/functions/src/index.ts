@@ -32,7 +32,7 @@ export const createDocument = functions.https.onCall((data, context) => {
 	const docName = data.doc;
 
 	
-	return db.collection('docs').doc(`${ uid }/${ docName }`).set({
+	return db.collection('docs').doc(`${ uid }/${ docName }/data`).set({
 		owner: uid,
 		dateModified: Date.now() / 1000,
 		content: new Uint8Array(1)
@@ -53,7 +53,7 @@ export const updateDocument = functions.https.onCall((data, context) => {
 	const uid = context.auth.uid;
 	const docName = data.doc;
 	const content: Uint8Array = data.content;
-	return db.collection('docs').doc(`${ uid }/${ docName }`).update({
+	return db.collection('docs').doc(`${ uid }/${ docName }/data`).update({
 		dateModified: Date.now() / 1000,
 		content: content
 	}).then(() => {
@@ -81,7 +81,7 @@ export const getDocument = functions.https.onCall((data, context) => {
 	}
 	const uid = context.auth.uid;
 	const docName = data.doc;
-	return db.collection('docs').doc(`${ uid }/${ docName }`).get()
+	return db.collection('docs').doc(`${ uid }/${ docName }/data`).get()
 		.then(doc => {
 			if(!doc.exists)
 			{
@@ -93,5 +93,22 @@ export const getDocument = functions.https.onCall((data, context) => {
 				dateModified: docData.dateModified,
 				content: docData.content
 			}
+		})
+})
+
+export const removeDocument = functions.https.onCall((data, context) => {
+	if(!context.auth)
+	{
+		throw new functions.https.HttpsError('unauthenticated', 'Unable to verify user credentials');
+	}
+	const uid = context.auth.uid;
+	const docName = data.doc;
+	return db.collection('docs').doc(`${ uid }/${ docName }/data`).delete()
+		.then(() => {
+			return db.collection('users').doc(uid).update({
+				docs: fieldValue.arrayRemove(docName)
+			}).then(() => {
+				console.log('Document deleted!')
+			})
 		})
 })
