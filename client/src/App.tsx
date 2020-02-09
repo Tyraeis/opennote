@@ -178,7 +178,7 @@ export default class App extends React.Component<{}, AppState> {
                     });
                 }
                 this.setState({
-                    statusMessage: "Page Deleted."
+                    statusMessage: "Deleted " + fileName + "."
                 })
                 return this.updateDocumentList()
             })

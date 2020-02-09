@@ -49,6 +49,7 @@ export default class Page {
         this._canvas.onpointerdown = (e) => this.handlePointerDown(e);
         this._canvas.onpointermove = (e) => this.handlePointerMove(e);
         this._canvas.onpointerup = (e) => this.handlePointerUp(e);
+        this._canvas.oncontextmenu = (e) => e.preventDefault();
 
         this.needsRedraw = true;
 
@@ -184,7 +185,7 @@ export default class Page {
 
         // Add pointer to pointer list
         let p = this.getAndUpdatePointer(e);
-        if (e.buttons & 0x20) {
+        if (e.pointerType == "pen" && e.buttons & 0x20 || e.pointerType == "mouse" && e.buttons & 2) {
             // Erase
             p.action = PointerAction.Erase;
         } else {
